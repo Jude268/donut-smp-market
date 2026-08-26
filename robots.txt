@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://jude268.github.io/donut-smp-market/sitemap.xml
