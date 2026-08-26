@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Donut SMP Market Calculator — Best Items to Sell | Donut.Flip</title>
+<meta name="description" content="Free Donut SMP market flip calculator. Enter buy and sell prices to instantly find the best items to sell on the DonutSMP Minecraft server market for maximum profit.">
+<meta name="keywords" content="donut smp market, donut smp, donut smp calculator, donut smp flip, donut smp prices, donut smp items, donut auction">
+<link rel="canonical" href="https://donutflip.example.com/">
+<meta property="og:title" content="Donut SMP Market Calculator — Best Items to Sell">
+<meta property="og:description" content="Find the best DonutSMP items to sell on the market with this free flip profit calculator.">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a class="brand" href="#top">🍩 <span>Donut.Flip</span></a>
+      <div class="nav-links">
+        <a href="#top">Calculator</a>
+        <a href="#categories">Categories</a>
+        <a href="#about">About</a>
+      </div>
+      <span class="nav-tag">Not affiliated with DonutSMP</span>
+    </div>
+  </nav>
+
+  <header id="top" class="hero">
+    <h1>Best Items to Sell on <span class="glow">DonutSMP</span></h1>
+    <p class="subtitle">
+      Enter your own buy &amp; sell prices and instantly see which items give the biggest flip profit.
+      Everything is calculated live in your browser and saved locally — no server, no accounts.
+    </p>
+
+    <div class="stat-bar">
+      <div class="stat">
+        <span class="stat-label">🏆 Best Item</span>
+        <span id="bestItemName" class="stat-value">—</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">💰 Total Potential Profit</span>
+        <span id="totalPotentialProfit" class="stat-value">0</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">📦 Items Tracked</span>
+        <span id="itemCount" class="stat-value">0</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="loadPresetsBtn" class="btn secondary">✨ Load Example Items</button>
+      <button id="addItemBtn" class="btn primary">+ Add Item</button>
+      <button id="clearBtn" class="btn danger">Clear All</button>
+
+      <div class="sort-group">
+        <label for="sortSelect">Sort by</label>
+        <select id="sortSelect">
+          <option value="profitPerItem">Profit / Item</option>
+          <option value="totalProfit">Total Profit</option>
+          <option value="marginPercent">Margin %</option>
+          <option value="name">Name</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <main id="categories">
+    <div id="categoriesContainer"></div>
+    <p id="emptyState" class="empty-state">No items yet. Click "Load Example Items" or "+ Add Item" to get started.</p>
+  </main>
+
+  <footer id="about">
+    <p>🍩 Donut.Flip is a fan-made flip profit calculator inspired by donut.auction — not affiliated with DonutSMP.</p>
+    <p>Your data is saved locally in this browser only.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
