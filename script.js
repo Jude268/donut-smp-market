@@ -1,22 +1,14 @@
-const STORAGE_KEY = "donutSmpFlipItems";
+const STORAGE_KEY = "donutSmpMarketItems";
 
-// Example placeholder items — Donut SMP market prices fluctuate constantly,
-// so these are just starting points for the user to edit with real prices.
+// Real DonutSMP /ah auction prices reported by the site owner. Stack = 64 items.
 const PRESET_ITEMS = [
-  { name: "Elytra", category: "Popular", buyPrice: 280000000, sellPrice: 301000000, qty: 1 },
-  { name: "Netherite Ingot", category: "Netherite", buyPrice: 5600000, sellPrice: 5947977, qty: 1 },
-  { name: "Block of Netherite", category: "Netherite", buyPrice: 49000000, sellPrice: 52222300, qty: 1 },
-  { name: "Ancient Debris", category: "Netherite", buyPrice: 1550000, sellPrice: 1670829, qty: 1 },
-  { name: "Totem of Undying", category: "Misc", buyPrice: 82000, sellPrice: 89049, qty: 1 },
-  { name: "Enchanted Golden Apple", category: "Misc", buyPrice: 1000000, sellPrice: 1108698, qty: 1 },
-  { name: "Golden Apple", category: "Misc", buyPrice: 13500, sellPrice: 14637, qty: 1 },
-  { name: "Netherite Sword", category: "Kit", buyPrice: 6200000, sellPrice: 6671617, qty: 1 },
-  { name: "Netherite Helmet", category: "Kit", buyPrice: 5600000, sellPrice: 6010719, qty: 1 },
-  { name: "Redstone Dust", category: "Redstone", buyPrice: 870, sellPrice: 939, qty: 1 },
-  { name: "Block of Redstone", category: "Redstone", buyPrice: 2700, sellPrice: 2915, qty: 1 },
+  { name: "Diamond Ore", category: "Ores", stackValue: 350000 },
+  { name: "Redstone Ore", category: "Ores", stackValue: 26800 },
+  { name: "Gold Ingot", category: "Ores", stackValue: 192000 },
+  { name: "Lapis Lazuli", category: "Ores", stackValue: 149000 },
 ];
 
-const CATEGORY_ORDER = ["Popular", "Netherite", "Kit", "Misc", "Redstone", "Other"];
+const CATEGORY_ORDER = ["Popular", "Ores", "Netherite", "Kit", "Misc", "Redstone", "Other"];
 
 let items = [];
 
@@ -30,10 +22,8 @@ function saveItems() {
 }
 
 function computeMetrics(item) {
-  const profitPerItem = item.sellPrice - item.buyPrice;
-  const totalProfit = profitPerItem * item.qty;
-  const marginPercent = item.buyPrice > 0 ? (profitPerItem / item.buyPrice) * 100 : 0;
-  return { profitPerItem, totalProfit, marginPercent };
+  const unitValue = item.stackValue / 64;
+  return { unitValue, stackValue: item.stackValue };
 }
 
 function formatNumber(n) {
@@ -70,7 +60,7 @@ function render() {
   }
 
   const bestItem = [...items].sort(
-    (a, b) => computeMetrics(b).profitPerItem - computeMetrics(a).profitPerItem
+    (a, b) => computeMetrics(b).unitValue - computeMetrics(a).unitValue
   )[0];
 
   const groups = groupByCategory(items);
@@ -97,35 +87,26 @@ function render() {
     const grid = section.querySelector(".card-grid");
     groupItems.forEach((item) => {
       const realIndex = items.indexOf(item);
-      const { profitPerItem, totalProfit, marginPercent } = computeMetrics(item);
-      const profitClass = profitPerItem >= 0 ? "profit-positive" : "profit-negative";
-      const isBest = item === bestItem && profitPerItem > 0;
+      const { unitValue, stackValue } = computeMetrics(item);
+      const isBest = item === bestItem;
 
       const card = document.createElement("div");
       card.className = "item-card";
       card.innerHTML = `
-        ${isBest ? '<span class="best-badge">🏆 Best Flip</span>' : ""}
+        ${isBest ? '<span class="best-badge">🏆 Most Valuable</span>' : ""}
         <div class="card-top">
           <input type="text" class="name-input" value="${escapeHtml(item.name)}" data-field="name" data-index="${realIndex}">
           <button class="remove-btn" data-remove="${realIndex}" title="Remove">✕</button>
         </div>
         <div class="card-fields">
           <div>
-            <label>Buy Price</label>
-            <input type="number" min="0" value="${item.buyPrice}" data-field="buyPrice" data-index="${realIndex}">
-          </div>
-          <div>
-            <label>Sell Price</label>
-            <input type="number" min="0" value="${item.sellPrice}" data-field="sellPrice" data-index="${realIndex}">
-          </div>
-          <div class="qty-field">
-            <label>Qty</label>
-            <input type="number" min="0" value="${item.qty}" data-field="qty" data-index="${realIndex}">
+            <label>Stack (x64) Value</label>
+            <input type="number" min="0" value="${item.stackValue}" data-field="stackValue" data-index="${realIndex}">
           </div>
         </div>
         <div class="card-result">
-          <span>Margin: <strong class="${profitClass}">${marginPercent.toFixed(1)}%</strong></span>
-          <span class="profit-value ${profitClass}">${formatNumber(totalProfit)}</span>
+          <span>Per Item: <strong>${formatNumber(unitValue)}</strong></span>
+          <span class="profit-value profit-positive">${formatNumber(stackValue)}</span>
         </div>
       `;
       grid.appendChild(card);
@@ -150,7 +131,7 @@ function updateSummary(bestItem) {
     return;
   }
 
-  const total = items.reduce((sum, item) => sum + computeMetrics(item).totalProfit, 0);
+  const total = items.reduce((sum, item) => sum + computeMetrics(item).stackValue, 0);
 
   bestItemName.textContent = bestItem.name || "—";
   totalPotentialProfit.textContent = formatNumber(total);
@@ -183,7 +164,7 @@ function attachListeners() {
 }
 
 document.getElementById("addItemBtn").addEventListener("click", () => {
-  items.push({ name: "New Item", category: "Other", buyPrice: 0, sellPrice: 0, qty: 1 });
+  items.push({ name: "New Item", category: "Other", stackValue: 0 });
   saveItems();
   render();
 });

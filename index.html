@@ -29,17 +29,17 @@
   <header id="top" class="hero">
     <h1>Best Items to Sell on <span class="glow">DonutSMP</span></h1>
     <p class="subtitle">
-      Enter your own buy &amp; sell prices and instantly see which items give the biggest flip profit.
-      Everything is calculated live in your browser and saved locally — no server, no accounts.
+      Real player auction house prices from DonutSMP. Enter values from <code>/ah</code> and instantly see
+      which items are worth the most per item and per stack.
     </p>
 
     <div class="stat-bar">
       <div class="stat">
-        <span class="stat-label">🏆 Best Item</span>
+        <span class="stat-label">🏆 Most Valuable</span>
         <span id="bestItemName" class="stat-value">—</span>
       </div>
       <div class="stat">
-        <span class="stat-label">💰 Total Potential Profit</span>
+        <span class="stat-label">💰 Total Tracked Value</span>
         <span id="totalPotentialProfit" class="stat-value">0</span>
       </div>
       <div class="stat">
@@ -56,9 +56,8 @@
       <div class="sort-group">
         <label for="sortSelect">Sort by</label>
         <select id="sortSelect">
-          <option value="profitPerItem">Profit / Item</option>
-          <option value="totalProfit">Total Profit</option>
-          <option value="marginPercent">Margin %</option>
+          <option value="unitValue">Value / Item</option>
+          <option value="stackValue">Value / Stack (x64)</option>
           <option value="name">Name</option>
         </select>
       </div>
