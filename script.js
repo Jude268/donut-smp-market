@@ -1,4 +1,4 @@
-const STORAGE_KEY = "donutSmpMarketItemsFromVideoV1";
+const STORAGE_KEY = "donutSmpMarketItemsV2";
 const LEDGER_KEY = "donutSmpFlipLedger";
 
 const CATEGORY_ORDER = ["Popular", "Ores", "Netherite", "Kit", "Misc", "Redstone", "Other"];
@@ -6,39 +6,13 @@ const CATEGORY_ORDER = ["Popular", "Ores", "Netherite", "Kit", "Misc", "Redstone
 let items = [];
 let ledger = [];
 
-function parsePrice(value) {
-  const match = value.replace(/,/g, "").match(/\$?\s*([0-9]+(?:\.[0-9]+)?)\s*([KMB])?/i);
-  if (!match) return 0;
-  return Number(match[1]) * ({ K: 1000, M: 1000000, B: 1000000000 }[match[2]?.toUpperCase()] || 1);
-}
-
-function parseAuctionObservations(observations) {
-  return observations.filter((observation) => observation.page && observation.detected_prices.length)
-    .map((observation, index) => {
-      const pageText = observation.ocr_text.split("|").map((part) => part.trim());
-      const pageIndex = pageText.findIndex((part) => /(?:page|hage)\s*\d+/i.test(part));
-      const candidates = pageText.slice(pageIndex + 1).filter((part) => part && !/^\$?\s*[\d.,]+\s*[KMB]?$/i.test(part));
-      const name = (candidates[0] || "Unknown auction item").replace(/^(?:auction|ruction)\s*$/i, "Unknown auction item");
-      const priceText = pageText.slice(pageIndex + 1).find((part) => /\$\s*[\d.,]+\s*[KMB]?|\b[\d.,]+\s*[KMB]\b/i.test(part));
-      const price = priceText ? parsePrice(priceText) : Number(observation.detected_prices[0]) || 0;
-      return { name, category: "Auction items", buyStack: price || 0, sellStack: price || 0, page: observation.page, timestamp: observation.timestamp_seconds, id: `${observation.timestamp_seconds}-${index}` };
-    }).filter((item) => item.buyStack > 0);
-}
-
 async function loadItems() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (raw) {
     items = JSON.parse(raw);
   } else {
-    try {
-      const response = await fetch("auction-database.json");
-      const database = await response.json();
-      items = parseAuctionObservations(database.observations || []);
-      saveItems();
-    } catch (error) {
-      items = [];
-      console.error("Could not load auction-database.json", error);
-    }
+    items = [];
+    saveItems();
   }
   ledger = JSON.parse(localStorage.getItem(LEDGER_KEY) || "[]");
 }
@@ -228,11 +202,6 @@ document.getElementById("addItemBtn").addEventListener("click", () => {
   items.push({ name: "New Listing", category: "Other", buyStack: 0, sellStack: 0 });
   saveItems();
   render();
-});
-
-document.getElementById("reloadDatabaseBtn").addEventListener("click", () => {
-  localStorage.removeItem(STORAGE_KEY);
-  location.reload();
 });
 
 document.getElementById("clearBtn").addEventListener("click", () => {
