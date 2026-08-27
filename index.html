@@ -21,6 +21,8 @@
         <a href="#top">Market scanner</a>
         <a href="#categories">Opportunities</a>
         <a href="#inventory">Flip ledger</a>
+        <a href="auction-database.json" download>JSON database</a>
+        <a href="auction-database.csv" download>CSV export</a>
         <a href="#about">About</a>
       </div>
       <span class="nav-tag">Not affiliated with DonutSMP</span>
@@ -52,7 +54,7 @@
     </div>
 
     <div class="controls">
-      <button id="loadPresetsBtn" class="btn secondary">Load market snapshot</button>
+      <button id="reloadDatabaseBtn" class="btn secondary">Reload auction database</button>
       <button id="addItemBtn" class="btn primary">+ Add listing</button>
       <button id="clearBtn" class="btn danger">Clear All</button>
       <label class="budget-field">Budget <span>$</span><input id="budgetInput" type="number" min="0" placeholder="Any"></label>
@@ -72,7 +74,7 @@
   <main id="categories">
     <div class="market-heading"><div><p class="eyebrow">OPPORTUNITY BOARD</p><h2>Listings worth a look</h2></div><label class="search-field"><span>⌕</span><input id="searchInput" type="search" placeholder="Search items..."></label></div>
     <div id="categoriesContainer"></div>
-    <p id="emptyState" class="empty-state">No listings yet. Load a market snapshot or add one from your <code>/ah</code> scan.</p>
+    <p id="emptyState" class="empty-state">No auction items found in the video database.</p>
     <section id="inventory" class="ledger-section"><div class="market-heading"><div><p class="eyebrow">FLIP LEDGER</p><h2>Purchased listings</h2></div><strong id="ledgerTotal" class="ledger-total">$0 potential</strong></div><div id="ledgerContainer" class="ledger-empty">Buy a listing above to track it here.</div></section>
   </main>
 

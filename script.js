@@ -1,24 +1,46 @@
-const STORAGE_KEY = "donutSmpMarketItems";
+const STORAGE_KEY = "donutSmpMarketItemsFromVideoV1";
 const LEDGER_KEY = "donutSmpFlipLedger";
-
-// Real DonutSMP /ah auction prices reported by the site owner. Stack = 64 items.
-const PRESET_ITEMS = [
-  { name: "Diamond Ore", category: "Ores", buyStack: 220000, sellStack: 350000 },
-  { name: "Redstone Ore", category: "Redstone", buyStack: 18000, sellStack: 26800 },
-  { name: "Gold Ingot", category: "Ores", buyStack: 122000, sellStack: 192000 },
-  { name: "Lapis Lazuli", category: "Ores", buyStack: 90000, sellStack: 149000 },
-];
 
 const CATEGORY_ORDER = ["Popular", "Ores", "Netherite", "Kit", "Misc", "Redstone", "Other"];
 
 let items = [];
 let ledger = [];
 
-function loadItems() {
+function parsePrice(value) {
+  const match = value.replace(/,/g, "").match(/\$?\s*([0-9]+(?:\.[0-9]+)?)\s*([KMB])?/i);
+  if (!match) return 0;
+  return Number(match[1]) * ({ K: 1000, M: 1000000, B: 1000000000 }[match[2]?.toUpperCase()] || 1);
+}
+
+function parseAuctionObservations(observations) {
+  return observations.filter((observation) => observation.page && observation.detected_prices.length)
+    .map((observation, index) => {
+      const pageText = observation.ocr_text.split("|").map((part) => part.trim());
+      const pageIndex = pageText.findIndex((part) => /(?:page|hage)\s*\d+/i.test(part));
+      const candidates = pageText.slice(pageIndex + 1).filter((part) => part && !/^\$?\s*[\d.,]+\s*[KMB]?$/i.test(part));
+      const name = (candidates[0] || "Unknown auction item").replace(/^(?:auction|ruction)\s*$/i, "Unknown auction item");
+      const priceText = pageText.slice(pageIndex + 1).find((part) => /\$\s*[\d.,]+\s*[KMB]?|\b[\d.,]+\s*[KMB]\b/i.test(part));
+      const price = priceText ? parsePrice(priceText) : Number(observation.detected_prices[0]) || 0;
+      return { name, category: "Auction items", buyStack: price || 0, sellStack: price || 0, page: observation.page, timestamp: observation.timestamp_seconds, id: `${observation.timestamp_seconds}-${index}` };
+    }).filter((item) => item.buyStack > 0);
+}
+
+async function loadItems() {
   const raw = localStorage.getItem(STORAGE_KEY);
-  items = raw ? JSON.parse(raw) : PRESET_ITEMS.map((preset) => ({ ...preset }));
+  if (raw) {
+    items = JSON.parse(raw);
+  } else {
+    try {
+      const response = await fetch("auction-database.json");
+      const database = await response.json();
+      items = parseAuctionObservations(database.observations || []);
+      saveItems();
+    } catch (error) {
+      items = [];
+      console.error("Could not load auction-database.json", error);
+    }
+  }
   ledger = JSON.parse(localStorage.getItem(LEDGER_KEY) || "[]");
-  if (!raw) saveItems();
 }
 
 function saveItems() {
@@ -208,10 +230,9 @@ document.getElementById("addItemBtn").addEventListener("click", () => {
   render();
 });
 
-document.getElementById("loadPresetsBtn").addEventListener("click", () => {
-  PRESET_ITEMS.forEach((preset) => items.push({ ...preset }));
-  saveItems();
-  render();
+document.getElementById("reloadDatabaseBtn").addEventListener("click", () => {
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
 });
 
 document.getElementById("clearBtn").addEventListener("click", () => {
@@ -227,5 +248,4 @@ document.getElementById("sortSelect").addEventListener("change", render);
 document.getElementById("searchInput").addEventListener("input", render);
 document.getElementById("budgetInput").addEventListener("input", render);
 
-loadItems();
-render();
+loadItems().then(render);
