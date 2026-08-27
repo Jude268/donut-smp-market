@@ -16,8 +16,9 @@ let ledger = [];
 
 function loadItems() {
   const raw = localStorage.getItem(STORAGE_KEY);
-  items = raw ? JSON.parse(raw) : [];
+  items = raw ? JSON.parse(raw) : PRESET_ITEMS.map((preset) => ({ ...preset }));
   ledger = JSON.parse(localStorage.getItem(LEDGER_KEY) || "[]");
+  if (!raw) saveItems();
 }
 
 function saveItems() {
