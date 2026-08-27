@@ -1,29 +1,35 @@
 const STORAGE_KEY = "donutSmpMarketItems";
+const LEDGER_KEY = "donutSmpFlipLedger";
 
 // Real DonutSMP /ah auction prices reported by the site owner. Stack = 64 items.
 const PRESET_ITEMS = [
-  { name: "Diamond Ore", category: "Ores", stackValue: 350000 },
-  { name: "Redstone Ore", category: "Ores", stackValue: 26800 },
-  { name: "Gold Ingot", category: "Ores", stackValue: 192000 },
-  { name: "Lapis Lazuli", category: "Ores", stackValue: 149000 },
+  { name: "Diamond Ore", category: "Ores", buyStack: 220000, sellStack: 350000 },
+  { name: "Redstone Ore", category: "Redstone", buyStack: 18000, sellStack: 26800 },
+  { name: "Gold Ingot", category: "Ores", buyStack: 122000, sellStack: 192000 },
+  { name: "Lapis Lazuli", category: "Ores", buyStack: 90000, sellStack: 149000 },
 ];
 
 const CATEGORY_ORDER = ["Popular", "Ores", "Netherite", "Kit", "Misc", "Redstone", "Other"];
 
 let items = [];
+let ledger = [];
 
 function loadItems() {
   const raw = localStorage.getItem(STORAGE_KEY);
   items = raw ? JSON.parse(raw) : [];
+  ledger = JSON.parse(localStorage.getItem(LEDGER_KEY) || "[]");
 }
 
 function saveItems() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  localStorage.setItem(LEDGER_KEY, JSON.stringify(ledger));
 }
 
 function computeMetrics(item) {
-  const unitValue = item.stackValue / 64;
-  return { unitValue, stackValue: item.stackValue };
+  const buyStack = Number(item.buyStack) || 0;
+  const sellStack = Number(item.sellStack ?? item.stackValue) || 0;
+  const profit = sellStack - buyStack;
+  return { buyStack, sellStack, profit, roi: buyStack ? (profit / buyStack) * 100 : 0 };
 }
 
 function formatNumber(n) {
@@ -50,20 +56,24 @@ function render() {
   const container = document.getElementById("categoriesContainer");
   const emptyState = document.getElementById("emptyState");
   const sortKey = document.getElementById("sortSelect").value;
+  const query = document.getElementById("searchInput").value.trim().toLowerCase();
+  const budget = Number(document.getElementById("budgetInput").value) || Infinity;
+  const visibleItems = items.filter((item) => item.name.toLowerCase().includes(query) && computeMetrics(item).buyStack <= budget);
 
   container.innerHTML = "";
-  emptyState.style.display = items.length === 0 ? "block" : "none";
+  emptyState.style.display = visibleItems.length === 0 ? "block" : "none";
 
-  if (items.length === 0) {
+  if (visibleItems.length === 0) {
     updateSummary();
+    renderLedger();
     return;
   }
 
-  const bestItem = [...items].sort(
-    (a, b) => computeMetrics(b).unitValue - computeMetrics(a).unitValue
+  const bestItem = [...visibleItems].sort(
+    (a, b) => computeMetrics(b).profit - computeMetrics(a).profit
   )[0];
 
-  const groups = groupByCategory(items);
+  const groups = groupByCategory(visibleItems);
   const orderedCategories = [
     ...CATEGORY_ORDER.filter((c) => groups[c]),
     ...Object.keys(groups).filter((c) => !CATEGORY_ORDER.includes(c)),
@@ -87,7 +97,7 @@ function render() {
     const grid = section.querySelector(".card-grid");
     groupItems.forEach((item) => {
       const realIndex = items.indexOf(item);
-      const { unitValue, stackValue } = computeMetrics(item);
+      const { buyStack, sellStack, profit, roi } = computeMetrics(item);
       const isBest = item === bestItem;
 
       const card = document.createElement("div");
@@ -100,14 +110,19 @@ function render() {
         </div>
         <div class="card-fields">
           <div>
-            <label>Stack (x64) Value</label>
-            <input type="number" min="0" value="${item.stackValue}" data-field="stackValue" data-index="${realIndex}">
+            <label>Buy / stack</label>
+            <input type="number" min="0" value="${buyStack}" data-field="buyStack" data-index="${realIndex}">
+          </div>
+          <div>
+            <label>Target sell</label>
+            <input type="number" min="0" value="${sellStack}" data-field="sellStack" data-index="${realIndex}">
           </div>
         </div>
         <div class="card-result">
-          <span>Per Item: <strong>${formatNumber(unitValue)}</strong></span>
-          <span class="profit-value profit-positive">${formatNumber(stackValue)}</span>
+          <span>ROI: <strong class="${roi >= 0 ? "profit-positive" : "profit-negative"}">${roi.toFixed(1)}%</strong></span>
+          <span class="profit-value ${profit >= 0 ? "profit-positive" : "profit-negative"}">${formatNumber(profit)}</span>
         </div>
+        <button class="btn buy-btn" data-buy="${realIndex}" ${buyStack <= 0 ? "disabled" : ""}>Buy & track flip</button>
       `;
       grid.appendChild(card);
     });
@@ -116,6 +131,7 @@ function render() {
   });
 
   updateSummary(bestItem);
+  renderLedger();
   attachListeners();
 }
 
@@ -131,7 +147,7 @@ function updateSummary(bestItem) {
     return;
   }
 
-  const total = items.reduce((sum, item) => sum + computeMetrics(item).stackValue, 0);
+  const total = items.reduce((sum, item) => sum + Math.max(0, computeMetrics(item).profit), 0);
 
   bestItemName.textContent = bestItem.name || "—";
   totalPotentialProfit.textContent = formatNumber(total);
@@ -161,10 +177,32 @@ function attachListeners() {
       render();
     });
   });
+
+  document.querySelectorAll("[data-buy]").forEach((btn) => btn.addEventListener("click", (e) => {
+    const item = items[Number(e.currentTarget.dataset.buy)];
+    if (!item) return;
+    ledger.push({ ...item, id: Date.now() });
+    saveItems();
+    render();
+  }));
+}
+
+function renderLedger() {
+  const container = document.getElementById("ledgerContainer");
+  const total = ledger.reduce((sum, item) => sum + Math.max(0, computeMetrics(item).profit), 0);
+  document.getElementById("ledgerTotal").textContent = `${formatNumber(total)} potential`;
+  container.innerHTML = ledger.length
+    ? ledger.map((item) => `<div class="ledger-row"><strong>${escapeHtml(item.name)}</strong><span>Buy ${formatNumber(computeMetrics(item).buyStack)}</span><span class="profit-positive">Flip +${formatNumber(computeMetrics(item).profit)}</span><button class="remove-btn" data-ledger-remove="${item.id}" title="Remove from ledger">✕</button></div>`).join("")
+    : "Buy a listing above to track it here.";
+  container.querySelectorAll("[data-ledger-remove]").forEach((button) => button.addEventListener("click", () => {
+    ledger = ledger.filter((item) => item.id !== Number(button.dataset.ledgerRemove));
+    saveItems();
+    renderLedger();
+  }));
 }
 
 document.getElementById("addItemBtn").addEventListener("click", () => {
-  items.push({ name: "New Item", category: "Other", stackValue: 0 });
+  items.push({ name: "New Listing", category: "Other", buyStack: 0, sellStack: 0 });
   saveItems();
   render();
 });
@@ -185,6 +223,8 @@ document.getElementById("clearBtn").addEventListener("click", () => {
 });
 
 document.getElementById("sortSelect").addEventListener("change", render);
+document.getElementById("searchInput").addEventListener("input", render);
+document.getElementById("budgetInput").addEventListener("input", render);
 
 loadItems();
 render();

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google-site-verification" content="_wqG8khoDT4K7gZWiHFB8NOq0Kxu7JXv98GjhaQM6qo" />
-<title>Donut SMP Market Calculator — Best Items to Sell | Donut.Flip</title>
+<title>Donut SMP Market Scanner — Find and Flip Items | Donut.Flip</title>
 <meta name="description" content="Free Donut SMP market flip calculator. Enter buy and sell prices to instantly find the best items to sell on the DonutSMP Minecraft server market for maximum profit.">
 <meta name="keywords" content="donut smp market, donut smp, donut smp calculator, donut smp flip, donut smp prices, donut smp items, donut auction">
 <link rel="canonical" href="https://jude268.github.io/donut-smp-market/">
@@ -16,10 +16,11 @@
 <body>
   <nav class="navbar">
     <div class="nav-inner">
-      <a class="brand" href="#top">🍩 <span>Donut.Flip</span></a>
+      <a class="brand" href="#top"><span class="brand-icon" aria-hidden="true">●</span><span>Donut.Flip</span></a>
       <div class="nav-links">
-        <a href="#top">Calculator</a>
-        <a href="#categories">Categories</a>
+        <a href="#top">Market scanner</a>
+        <a href="#categories">Opportunities</a>
+        <a href="#inventory">Flip ledger</a>
         <a href="#about">About</a>
       </div>
       <span class="nav-tag">Not affiliated with DonutSMP</span>
@@ -27,37 +28,41 @@
   </nav>
 
   <header id="top" class="hero">
-    <h1>Best Items to Sell on <span class="glow">DonutSMP</span></h1>
+    <p class="eyebrow">DONUT SMP / MARKET DESK</p>
+    <h1>Find the gap. <span class="glow">Buy low.</span> Flip smart.</h1>
     <p class="subtitle">
-      Real player auction house prices from DonutSMP. Enter values from <code>/ah</code> and instantly see
-      which items are worth the most per item and per stack.
+      Paste the numbers you see in <code>/ah</code>, compare a buy listing with your target sell price,
+      and keep a local ledger of the flips you are watching.
     </p>
+    <div class="notice"><span class="live-dot"></span><strong>Local market snapshot</strong><span>Static sites cannot read or purchase from the DonutSMP auction house automatically.</span></div>
 
     <div class="stat-bar">
       <div class="stat">
-        <span class="stat-label">🏆 Most Valuable</span>
+        <span class="stat-label">🏆 Best flip</span>
         <span id="bestItemName" class="stat-value">—</span>
       </div>
       <div class="stat">
-        <span class="stat-label">💰 Total Tracked Value</span>
+        <span class="stat-label">💰 Potential profit</span>
         <span id="totalPotentialProfit" class="stat-value">0</span>
       </div>
       <div class="stat">
-        <span class="stat-label">📦 Items Tracked</span>
+        <span class="stat-label">📦 Listings scanned</span>
         <span id="itemCount" class="stat-value">0</span>
       </div>
     </div>
 
     <div class="controls">
-      <button id="loadPresetsBtn" class="btn secondary">✨ Load Example Items</button>
-      <button id="addItemBtn" class="btn primary">+ Add Item</button>
+      <button id="loadPresetsBtn" class="btn secondary">Load market snapshot</button>
+      <button id="addItemBtn" class="btn primary">+ Add listing</button>
       <button id="clearBtn" class="btn danger">Clear All</button>
+      <label class="budget-field">Budget <span>$</span><input id="budgetInput" type="number" min="0" placeholder="Any"></label>
 
       <div class="sort-group">
         <label for="sortSelect">Sort by</label>
         <select id="sortSelect">
-          <option value="unitValue">Value / Item</option>
-          <option value="stackValue">Value / Stack (x64)</option>
+          <option value="profit">Profit / Stack</option>
+          <option value="roi">ROI</option>
+          <option value="buyStack">Buy price</option>
           <option value="name">Name</option>
         </select>
       </div>
@@ -65,8 +70,10 @@
   </header>
 
   <main id="categories">
+    <div class="market-heading"><div><p class="eyebrow">OPPORTUNITY BOARD</p><h2>Listings worth a look</h2></div><label class="search-field"><span>⌕</span><input id="searchInput" type="search" placeholder="Search items..."></label></div>
     <div id="categoriesContainer"></div>
-    <p id="emptyState" class="empty-state">No items yet. Click "Load Example Items" or "+ Add Item" to get started.</p>
+    <p id="emptyState" class="empty-state">No listings yet. Load a market snapshot or add one from your <code>/ah</code> scan.</p>
+    <section id="inventory" class="ledger-section"><div class="market-heading"><div><p class="eyebrow">FLIP LEDGER</p><h2>Purchased listings</h2></div><strong id="ledgerTotal" class="ledger-total">$0 potential</strong></div><div id="ledgerContainer" class="ledger-empty">Buy a listing above to track it here.</div></section>
   </main>
 
   <footer id="about">
